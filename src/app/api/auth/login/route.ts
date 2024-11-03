@@ -37,12 +37,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Обновляем время последнего входа
-    await prisma.adminUser.update({
-      where: { id: user.id },
-      data: { lastLogin: new Date() }
-    });
-
     // Создаем JWT токен
     const token = jwt.sign(
       { 

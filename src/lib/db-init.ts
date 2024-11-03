@@ -4,6 +4,8 @@ import bcrypt from 'bcryptjs';
 
 export async function initDatabase() {
   try {
+    console.log('Starting database initialization...');
+    
     // Проверяем существование админа
     const adminExists = await prisma.adminUser.findFirst({
       where: { role: 'admin' }
@@ -26,6 +28,8 @@ export async function initDatabase() {
       });
 
       console.log('Default admin user created');
+    } else {
+      console.log('Admin user already exists');
     }
 
     console.log('Database initialization completed');
