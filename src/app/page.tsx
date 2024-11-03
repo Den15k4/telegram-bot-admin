@@ -1,8 +1,10 @@
+// src/app/page.tsx
 import { Metadata } from "next"
+import { AuthForm } from "@/components/auth/auth-form"
 
 export const metadata: Metadata = {
-  title: "Authentication",
-  description: "Authentication forms built using the components.",
+  title: "Аутентификация",
+  description: "Вход в панель управления ботом",
 }
 
 export default function AuthenticationPage() {
@@ -43,7 +45,7 @@ export default function AuthenticationPage() {
               Введите свои учетные данные для входа
             </p>
           </div>
-          {/* Здесь будет форма входа */}
+          <AuthForm />
           <p className="px-8 text-center text-sm text-muted-foreground">
             Если у вас нет доступа, обратитесь к администратору
           </p>
