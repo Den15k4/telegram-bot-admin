@@ -1,6 +1,6 @@
 // src/app/api/auth/login/route.ts
 import { NextResponse } from 'next/server';
-import { pool } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -16,12 +16,9 @@ export async function POST(req: Request) {
     }
 
     // Проверяем существование пользователя
-    const result = await pool.query(
-      'SELECT * FROM admin_users WHERE email = $1',
-      [email]
-    );
-
-    const user = result.rows[0];
+    const user = await prisma.adminUser.findUnique({
+      where: { email }
+    });
 
     if (!user) {
       return NextResponse.json(
@@ -31,7 +28,7 @@ export async function POST(req: Request) {
     }
 
     // Проверяем пароль
-    const validPassword = await bcrypt.compare(password, user.password_hash);
+    const validPassword = await bcrypt.compare(password, user.passwordHash);
 
     if (!validPassword) {
       return NextResponse.json(
@@ -39,6 +36,12 @@ export async function POST(req: Request) {
         { status: 401 }
       );
     }
+
+    // Обновляем время последнего входа
+    await prisma.adminUser.update({
+      where: { id: user.id },
+      data: { lastLogin: new Date() }
+    });
 
     // Создаем JWT токен
     const token = jwt.sign(
@@ -51,14 +54,13 @@ export async function POST(req: Request) {
       { expiresIn: '24h' }
     );
 
-    // Возвращаем токен и информацию о пользователе
     return NextResponse.json({
       token,
       user: {
         id: user.id,
         email: user.email,
         role: user.role,
-        created_at: user.created_at
+        created_at: user.createdAt
       }
     });
 
