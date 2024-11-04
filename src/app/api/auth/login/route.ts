@@ -3,34 +3,15 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '@/lib/db';
 
-async function ensureAdminExists() {
-  try {
-    const adminCount = await prisma.adminUser.count();
-    
-    if (adminCount === 0) {
-      const hashedPassword = await bcrypt.hash('admin123', 10);
-      await prisma.adminUser.create({
-        data: {
-          email: 'admin@example.com',
-          passwordHash: hashedPassword,
-          role: 'admin'
-        }
-      });
-      console.log('Default admin user created');
-    }
-  } catch (error) {
-    console.error('Error ensuring admin exists:', error);
-  }
-}
-
 export async function POST(req: Request) {
+  console.log('Login request received');
+  
   try {
-    // Создаем админа если его нет
-    await ensureAdminExists();
-
     const { email, password } = await req.json();
+    console.log('Login attempt for email:', email);
 
     if (!email || !password) {
+      console.log('Missing email or password');
       return NextResponse.json(
         { message: 'Email и пароль обязательны' },
         { status: 400 }
@@ -42,6 +23,7 @@ export async function POST(req: Request) {
     });
 
     if (!user) {
+      console.log('User not found');
       return NextResponse.json(
         { message: 'Неверные учетные данные' },
         { status: 401 }
@@ -51,10 +33,16 @@ export async function POST(req: Request) {
     const validPassword = await bcrypt.compare(password, user.passwordHash);
 
     if (!validPassword) {
+      console.log('Invalid password');
       return NextResponse.json(
         { message: 'Неверные учетные данные' },
         { status: 401 }
       );
+    }
+
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET is not set');
+      throw new Error('JWT_SECRET is not configured');
     }
 
     const token = jwt.sign(
@@ -63,7 +51,7 @@ export async function POST(req: Request) {
         email: user.email,
         role: user.role
       },
-      process.env.JWT_SECRET!,
+      process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
@@ -72,7 +60,7 @@ export async function POST(req: Request) {
       data: { lastLogin: new Date() }
     });
 
-    return NextResponse.json({
+    const response = {
       token,
       user: {
         id: user.id,
@@ -80,10 +68,23 @@ export async function POST(req: Request) {
         role: user.role,
         created_at: user.createdAt
       }
+    };
+
+    console.log('Login successful, sending response');
+
+    // Устанавливаем cookie с токеном
+    const cookieResponse = NextResponse.json(response);
+    cookieResponse.cookies.set('auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 // 24 hours
     });
 
+    return cookieResponse;
+
   } catch (error) {
-    console.error('Ошибка аутентификации:', error);
+    console.error('Login error:', error);
     return NextResponse.json(
       { message: 'Внутренняя ошибка сервера' },
       { status: 500 }

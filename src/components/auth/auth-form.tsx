@@ -32,35 +32,40 @@ export function AuthForm() {
     const password = formData.get('password') as string;
 
     try {
-      console.log('Attempting login with:', { email });
+      console.log('Sending login request...');
+      
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
+        credentials: 'include' // Важно для работы с cookies
       });
 
       console.log('Response status:', response.status);
-      const data = await response.json();
-      console.log('Response data:', data);
+      
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        console.log('Response data:', data);
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Ошибка входа');
+        if (!response.ok) {
+          throw new Error(data.message || 'Ошибка входа');
+        }
+
+        const loginData = data as LoginResponse;
+        
+        // Сохраняем данные пользователя
+        localStorage.setItem('user_data', JSON.stringify(loginData.user));
+        
+        console.log('Login successful, redirecting...');
+        
+        // Принудительно перезагружаем страницу и перенаправляем
+        window.location.href = '/dashboard';
+      } else {
+        throw new Error('Неверный формат ответа от сервера');
       }
-
-      const loginData = data as LoginResponse;
-      
-      // Сохраняем токен и данные пользователя
-      localStorage.setItem('auth_token', loginData.token);
-      localStorage.setItem('user_data', JSON.stringify(loginData.user));
-      
-      console.log('Login successful, redirecting to dashboard...');
-      
-      // Перенаправляем на дашборд
-      router.push('/dashboard');
-      router.refresh(); // Обновляем состояние роутера
-      
     } catch (error) {
       console.error('Login error:', error);
       setError(error instanceof Error ? error.message : 'Произошла ошибка при входе');
