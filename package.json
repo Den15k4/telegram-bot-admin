@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && node -r ts-node/register src/lib/create-admin-table.ts && next build",
+    "build": "prisma generate && node -r ts-node/register --trace-warnings src/lib/create-admin-table.ts && next build",
     "start": "next start",
     "postinstall": "prisma generate"
   },
@@ -43,10 +43,5 @@
     "postcss": "8.4.35",
     "prisma": "5.9.1",
     "tailwindcss": "3.4.1"
-  },
-  "ts-node": {
-    "compilerOptions": {
-      "module": "CommonJS"
-    }
   }
 }

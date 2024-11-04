@@ -1,9 +1,13 @@
 // src/lib/create-admin-table.ts
+const { PrismaClient } = require('@prisma/client')
 const bcrypt = require('bcryptjs')
-const prisma = require('./prisma-client')
+
+const prisma = new PrismaClient()
 
 async function createAdminTable() {
   try {
+    console.log('Starting admin table setup...')
+
     // Создаем таблицу с помощью raw SQL
     await prisma.$executeRaw`
       CREATE TABLE IF NOT EXISTS admin_users (
@@ -16,12 +20,16 @@ async function createAdminTable() {
       );
     `
 
+    console.log('Admin table created or already exists')
+
     // Проверяем существование админа
-    const adminCount = await prisma.$queryRaw`
+    const result = await prisma.$queryRaw`
       SELECT COUNT(*)::int as count FROM admin_users WHERE email = 'admin@example.com';
     `
 
-    if (adminCount[0].count === 0) {
+    const count = result[0].count
+
+    if (count === 0) {
       console.log('Creating admin user...')
       const hashedPassword = await bcrypt.hash('admin123', 10)
       
@@ -31,14 +39,14 @@ async function createAdminTable() {
         VALUES ('admin@example.com', ${hashedPassword}, 'admin')
         ON CONFLICT (email) DO NOTHING;
       `
-      console.log('Admin user created')
+      console.log('Admin user created successfully')
     } else {
       console.log('Admin user already exists')
     }
 
     console.log('Admin table setup completed')
   } catch (error) {
-    console.error('Error creating admin table:', error)
+    console.error('Error during admin setup:', error)
     process.exit(1)
   } finally {
     await prisma.$disconnect()
@@ -46,7 +54,7 @@ async function createAdminTable() {
 }
 
 createAdminTable()
-  .catch(console.error)
-  .finally(async () => {
-    await prisma.$disconnect()
+  .catch((error) => {
+    console.error('Fatal error during setup:', error)
+    process.exit(1)
   })
