@@ -1,33 +1,25 @@
 // src/middleware.ts
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { cookies } from 'next/headers'
 
 export function middleware(request: NextRequest) {
-  // Пропускаем запросы к API аутентификации
-  if (request.nextUrl.pathname.startsWith('/api/auth')) {
+  // Игнорируем API маршруты и страницу входа
+  if (request.nextUrl.pathname.startsWith('/api') || request.nextUrl.pathname === '/') {
     return NextResponse.next()
   }
 
-  // Пропускаем страницу входа
-  if (request.nextUrl.pathname === '/') {
-    return NextResponse.next()
-  }
+  const token = request.cookies.get('auth-token')?.value
 
-  // Проверяем наличие токена
-  const token = request.cookies.get('token')?.value
-
+  // Если нет токена, перенаправляем на страницу входа
   if (!token) {
-    return NextResponse.redirect(new URL('/', request.url))
+    const loginUrl = new URL('/', request.url)
+    return NextResponse.redirect(loginUrl)
   }
 
   return NextResponse.next()
 }
 
-// Указываем, для каких путей применять middleware
+// Указываем маршруты для проверки
 export const config = {
-  matcher: [
-    '/api/:path*',
-    '/dashboard/:path*'
-  ]
+  matcher: ['/dashboard/:path*']
 }
