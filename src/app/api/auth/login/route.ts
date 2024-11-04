@@ -1,18 +1,13 @@
-// src/app/api/auth/login/route.ts
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-
-const prisma = new PrismaClient();
+import prisma from '@/lib/db';
 
 async function ensureAdminExists() {
   try {
-    const adminExists = await prisma.adminUser.findFirst({
-      where: { email: 'admin@example.com' }
-    });
-
-    if (!adminExists) {
+    const adminCount = await prisma.adminUser.count();
+    
+    if (adminCount === 0) {
       const hashedPassword = await bcrypt.hash('admin123', 10);
       await prisma.adminUser.create({
         data: {
@@ -21,6 +16,7 @@ async function ensureAdminExists() {
           role: 'admin'
         }
       });
+      console.log('Default admin user created');
     }
   } catch (error) {
     console.error('Error ensuring admin exists:', error);
@@ -29,6 +25,7 @@ async function ensureAdminExists() {
 
 export async function POST(req: Request) {
   try {
+    // Создаем админа если его нет
     await ensureAdminExists();
 
     const { email, password } = await req.json();
@@ -91,7 +88,5 @@ export async function POST(req: Request) {
       { message: 'Внутренняя ошибка сервера' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
