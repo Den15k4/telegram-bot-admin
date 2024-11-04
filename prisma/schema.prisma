@@ -26,17 +26,17 @@ model User {
 }
 
 model Payment {
-  id                  Int      @id @default(autoincrement())
-  user_id            Int
-  order_id           String?   @unique
-  merchant_order_id  String?   @unique
-  amount             Decimal
-  credits            Int
-  status             String
-  currency           String
-  created_at         DateTime  @default(now())
-  updated_at         DateTime  @default(now())
-  user               User      @relation(fields: [user_id], references: [id])
+  id                Int      @id @default(autoincrement())
+  user_id          Int
+  order_id         String?  @unique
+  merchant_order_id String?  @unique
+  amount           Decimal
+  credits          Int
+  status           String
+  currency         String
+  created_at       DateTime @default(now())
+  updated_at       DateTime @default(now())
+  user             User     @relation(fields: [user_id], references: [id])
 
   @@map("payments")
 }
