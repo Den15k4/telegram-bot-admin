@@ -1,70 +1,56 @@
 // src/components/auth/auth-form.tsx
-"use client"
+"use client";
 
-import * as React from "react"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-
-interface LoginResponse {
-  token: string
-  user: {
-    id: number
-    email: string
-    role: string
-    created_at: string
-  }
-}
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import type { AuthResponse } from "@/types";
 
 export function AuthForm() {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    setIsLoading(true)
-    setError(null)
+    event.preventDefault();
+    setIsLoading(true);
+    setError(null);
 
-    const formData = new FormData(event.currentTarget)
-    const email = formData.get('email') as string
-    const password = formData.get('password') as string
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
 
     try {
-      console.log('Отправка запроса на сервер...')
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
-      })
+      });
 
-      console.log('Получен ответ от сервера:', response.status)
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Ошибка входа')
+        throw new Error(data.message || 'Ошибка входа');
       }
 
-      const loginData = data as LoginResponse
+      const loginData = data as AuthResponse;
       
-      // Сохраняем токен
-      localStorage.setItem('token', loginData.token)
-      // Сохраняем информацию о пользователе
-      localStorage.setItem('user', JSON.stringify(loginData.user))
+      localStorage.setItem('token', loginData.token);
+      localStorage.setItem('user', JSON.stringify(loginData.user));
 
-      console.log('Успешный вход, перенаправление...')
-      router.push('/dashboard')
+      router.push('/dashboard');
     } catch (error) {
-      console.error('Ошибка при входе:', error)
-      setError(error instanceof Error ? error.message : 'Произошла ошибка при входе')
+      console.error('Ошибка при входе:', error);
+      setError(error instanceof Error ? error.message : 'Произошла ошибка при входе');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="grid gap-6">
@@ -112,5 +98,5 @@ export function AuthForm() {
         </div>
       </form>
     </div>
-  )
+  );
 }

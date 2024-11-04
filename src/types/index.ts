@@ -1,15 +1,12 @@
+// src/types/index.ts
 export interface User {
   id: number;
   email: string;
-  role: 'admin' | 'support' | 'viewer';
-  created_at: Date;
+  role: string;
+  created_at: string;
 }
 
 export interface AuthResponse {
   token: string;
   user: User;
-}
-
-export interface ErrorResponse {
-  message: string;
 }
