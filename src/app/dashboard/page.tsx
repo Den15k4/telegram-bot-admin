@@ -12,6 +12,8 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BroadcastModal } from '@/components/modals/broadcast-modal';
+
 
 interface User {
   id: number;
@@ -39,8 +41,8 @@ export default function DashboardPage() {
     processedImages: 0,
     averageCredits: 0
   });
-
   const [usageData, setUsageData] = useState([]);
+  const [isBroadcastModalOpen, setBroadcastModalOpen] = useState(false);
 
   useEffect(() => {
     const userData = localStorage.getItem('user_data');
@@ -74,6 +76,9 @@ export default function DashboardPage() {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user_data');
     window.location.href = '/';
+  };
+  const handleBroadcastClick = () => {
+    setBroadcastModalOpen(true);
   };
 
   return (
@@ -175,6 +180,10 @@ export default function DashboardPage() {
             </button>
           </div>
         </main>
+        <BroadcastModal 
+          isOpen={isBroadcastModalOpen} 
+          onClose={() => setBroadcastModalOpen(false)} 
+        />
       </div>
     </AuthCheck>
   );
