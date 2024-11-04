@@ -1,24 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-interface LoginResponse {
-  token: string;
-  user: {
-    id: number;
-    email: string;
-    role: string;
-    created_at: string;
-  };
-}
-
 export function AuthForm() {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,33 +27,29 @@ export function AuthForm() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
-        credentials: 'include' // Важно для работы с cookies
+        body: JSON.stringify({ email, password })
       });
 
       console.log('Response status:', response.status);
       
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        const data = await response.json();
-        console.log('Response data:', data);
+      const data = await response.json();
+      console.log('Response received:', data);
 
-        if (!response.ok) {
-          throw new Error(data.message || 'Ошибка входа');
-        }
+      if (!response.ok) {
+        throw new Error(data.message || 'Ошибка входа');
+      }
 
-        const loginData = data as LoginResponse;
-        
-        // Сохраняем данные пользователя
-        localStorage.setItem('user_data', JSON.stringify(loginData.user));
+      if (data.success) {
+        // Сохраняем токен и данные пользователя
+        localStorage.setItem('auth_token', data.token);
+        localStorage.setItem('user_data', JSON.stringify(data.user));
         
         console.log('Login successful, redirecting...');
         
-        // Принудительно перезагружаем страницу и перенаправляем
+        // Перенаправляем на дашборд
         window.location.href = '/dashboard';
-      } else {
-        throw new Error('Неверный формат ответа от сервера');
       }
+
     } catch (error) {
       console.error('Login error:', error);
       setError(error instanceof Error ? error.message : 'Произошла ошибка при входе');
@@ -89,7 +73,6 @@ export function AuthForm() {
               autoCorrect="off"
               disabled={isLoading}
               defaultValue="admin@example.com"
-              required
             />
           </div>
           <div className="grid gap-1">
@@ -101,7 +84,6 @@ export function AuthForm() {
               autoComplete="current-password"
               disabled={isLoading}
               defaultValue="admin123"
-              required
             />
           </div>
           {error && (
@@ -109,11 +91,11 @@ export function AuthForm() {
               {error}
             </div>
           )}
-          <Button type="submit" disabled={isLoading}>
+          <Button disabled={isLoading}>
             {isLoading ? (
               <div className="flex items-center gap-2">
                 <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                Вход...
+                <span>Вход...</span>
               </div>
             ) : (
               'Войти'
