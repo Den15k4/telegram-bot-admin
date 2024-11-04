@@ -1,4 +1,3 @@
-// src/components/auth/auth-form.tsx
 "use client";
 
 import * as React from "react";
@@ -7,7 +6,16 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { AuthResponse } from "@/types";
+
+interface LoginResponse {
+  token: string;
+  user: {
+    id: number;
+    email: string;
+    role: string;
+    created_at: string;
+  };
+}
 
 export function AuthForm() {
   const router = useRouter();
@@ -24,6 +32,7 @@ export function AuthForm() {
     const password = formData.get('password') as string;
 
     try {
+      console.log('Attempting login with:', { email });
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -32,20 +41,28 @@ export function AuthForm() {
         body: JSON.stringify({ email, password }),
       });
 
+      console.log('Response status:', response.status);
       const data = await response.json();
+      console.log('Response data:', data);
 
       if (!response.ok) {
         throw new Error(data.message || 'Ошибка входа');
       }
 
-      const loginData = data as AuthResponse;
+      const loginData = data as LoginResponse;
       
-      localStorage.setItem('token', loginData.token);
-      localStorage.setItem('user', JSON.stringify(loginData.user));
-
+      // Сохраняем токен и данные пользователя
+      localStorage.setItem('auth_token', loginData.token);
+      localStorage.setItem('user_data', JSON.stringify(loginData.user));
+      
+      console.log('Login successful, redirecting to dashboard...');
+      
+      // Перенаправляем на дашборд
       router.push('/dashboard');
+      router.refresh(); // Обновляем состояние роутера
+      
     } catch (error) {
-      console.error('Ошибка при входе:', error);
+      console.error('Login error:', error);
       setError(error instanceof Error ? error.message : 'Произошла ошибка при входе');
     } finally {
       setIsLoading(false);
@@ -66,6 +83,7 @@ export function AuthForm() {
               autoComplete="email"
               autoCorrect="off"
               disabled={isLoading}
+              defaultValue="admin@example.com"
               required
             />
           </div>
@@ -77,18 +95,19 @@ export function AuthForm() {
               type="password"
               autoComplete="current-password"
               disabled={isLoading}
+              defaultValue="admin123"
               required
             />
           </div>
           {error && (
-            <div className="text-sm text-red-500 bg-red-50 p-2 rounded border border-red-200">
+            <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
               {error}
             </div>
           )}
-          <Button disabled={isLoading} className="w-full">
+          <Button type="submit" disabled={isLoading}>
             {isLoading ? (
-              <div className="flex items-center justify-center">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                 Вход...
               </div>
             ) : (
