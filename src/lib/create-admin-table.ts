@@ -1,6 +1,6 @@
 // src/lib/create-admin-table.ts
-import prisma from './prisma-client'
-import bcrypt from 'bcryptjs'
+const bcrypt = require('bcryptjs')
+const prisma = require('./prisma-client')
 
 async function createAdminTable() {
   try {
@@ -17,7 +17,7 @@ async function createAdminTable() {
     `
 
     // Проверяем существование админа
-    const adminCount = await prisma.$queryRaw<[{ count: number }]>`
+    const adminCount = await prisma.$queryRaw`
       SELECT COUNT(*)::int as count FROM admin_users WHERE email = 'admin@example.com';
     `
 
@@ -39,7 +39,7 @@ async function createAdminTable() {
     console.log('Admin table setup completed')
   } catch (error) {
     console.error('Error creating admin table:', error)
-    throw error
+    process.exit(1)
   } finally {
     await prisma.$disconnect()
   }
