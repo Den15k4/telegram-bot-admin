@@ -1,6 +1,19 @@
-// src/lib/prisma-client.ts
-const { PrismaClient } = require('@prisma/client')
+generator client {
+  provider = "prisma-client-js"
+}
 
-const prisma = new PrismaClient()
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
-module.exports = prisma
+model AdminUser {
+  id           Int       @id @default(autoincrement())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  role         String
+  createdAt    DateTime  @default(now()) @map("created_at")
+  lastLogin    DateTime? @map("last_login")
+
+  @@map("admin_users")
+}

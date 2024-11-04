@@ -1,14 +1,7 @@
-// src/lib/prisma-client.ts
-const { PrismaClient } = require('@prisma/client')
+const { PrismaClient } = require('@prisma/client');
 
-declare global {
-  var prisma: typeof PrismaClient | undefined
-}
+const prisma = new PrismaClient({
+  log: ['query', 'info', 'warn', 'error'],
+});
 
-const prismaClient = global.prisma || new PrismaClient()
-
-if (process.env.NODE_ENV !== 'production') {
-  global.prisma = prismaClient
-}
-
-module.exports = prismaClient
+module.exports = prisma;

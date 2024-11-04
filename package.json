@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && node -r ts-node/register --trace-warnings src/lib/create-admin-table.ts && next build",
+    "build": "prisma generate && prisma db push --accept-data-loss && node src/lib/create-admin-table.js && next build",
     "start": "next start",
     "postinstall": "prisma generate"
   },
