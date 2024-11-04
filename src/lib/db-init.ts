@@ -1,5 +1,5 @@
 // src/lib/db-init.ts
-import { prisma } from './prisma';
+import prisma from '@/lib/prisma-client'; // Обновленный импорт
 import bcrypt from 'bcryptjs';
 
 export async function initDatabase() {
