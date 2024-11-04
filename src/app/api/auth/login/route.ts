@@ -1,11 +1,36 @@
 // src/app/api/auth/login/route.ts
 import { NextResponse } from 'next/server';
-const prisma = require('@/lib/prisma-client');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+
+const prisma = new PrismaClient();
+
+async function ensureAdminExists() {
+  try {
+    const adminExists = await prisma.adminUser.findFirst({
+      where: { email: 'admin@example.com' }
+    });
+
+    if (!adminExists) {
+      const hashedPassword = await bcrypt.hash('admin123', 10);
+      await prisma.adminUser.create({
+        data: {
+          email: 'admin@example.com',
+          passwordHash: hashedPassword,
+          role: 'admin'
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Error ensuring admin exists:', error);
+  }
+}
 
 export async function POST(req: Request) {
   try {
+    await ensureAdminExists();
+
     const { email, password } = await req.json();
 
     if (!email || !password) {
@@ -15,7 +40,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Проверяем существование пользователя
     const user = await prisma.adminUser.findUnique({
       where: { email }
     });
@@ -27,7 +51,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Проверяем пароль
     const validPassword = await bcrypt.compare(password, user.passwordHash);
 
     if (!validPassword) {
@@ -37,9 +60,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // Создаем JWT токен
     const token = jwt.sign(
-      { 
+      {
         userId: user.id,
         email: user.email,
         role: user.role
@@ -47,6 +69,11 @@ export async function POST(req: Request) {
       process.env.JWT_SECRET!,
       { expiresIn: '24h' }
     );
+
+    await prisma.adminUser.update({
+      where: { id: user.id },
+      data: { lastLogin: new Date() }
+    });
 
     return NextResponse.json({
       token,
@@ -64,5 +91,7 @@ export async function POST(req: Request) {
       { message: 'Внутренняя ошибка сервера' },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }

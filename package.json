@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma db push --accept-data-loss && node src/lib/create-admin-table.js && next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "postinstall": "prisma generate"
   },
@@ -35,7 +35,6 @@
     "recharts": "2.11.0",
     "tailwind-merge": "2.2.1",
     "tailwindcss-animate": "1.0.7",
-    "ts-node": "10.9.2",
     "typescript": "5.3.3"
   },
   "devDependencies": {
