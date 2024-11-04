@@ -8,6 +8,39 @@ datasource db {
   url = env("DATABASE_URL")
 }
 
+model User {
+  id                Int       @id
+  username          String?
+  credits           Int       @default(0)
+  created_at        DateTime  @default(now())
+  last_used         DateTime?
+  pending_task_id   String?
+  referrer_id       Int?
+  total_referrals   Int       @default(0)
+  referral_earnings Decimal   @default(0)
+  payments          Payment[]
+  referrer          User?     @relation("ReferralRelation", fields: [referrer_id], references: [id])
+  referrals         User[]    @relation("ReferralRelation")
+
+  @@map("users")
+}
+
+model Payment {
+  id                  Int      @id @default(autoincrement())
+  user_id            Int
+  order_id           String?   @unique
+  merchant_order_id  String?   @unique
+  amount             Decimal
+  credits            Int
+  status             String
+  currency           String
+  created_at         DateTime  @default(now())
+  updated_at         DateTime  @default(now())
+  user               User      @relation(fields: [user_id], references: [id])
+
+  @@map("payments")
+}
+
 model AdminUser {
   id           Int       @id @default(autoincrement())
   email        String    @unique
