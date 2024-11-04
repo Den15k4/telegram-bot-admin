@@ -4,11 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma db push && ts-node --project tsconfig.json ./prisma/init.ts && next build",
+    "build": "npx prisma generate && npx prisma db push --accept-data-loss && ts-node --project tsconfig.json ./prisma/init.ts && next build",
     "start": "next start",
-    "postinstall": "prisma generate",
-    "db:push": "prisma db push",
-    "db:init": "ts-node --project tsconfig.json ./prisma/init.ts"
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "next": "14.1.0",
