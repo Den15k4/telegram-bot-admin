@@ -1,6 +1,6 @@
 // src/app/api/auth/login/route.ts
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma-client'; // Обновленный импорт
+import prisma from '@/lib/prisma-client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -36,6 +36,12 @@ export async function POST(req: Request) {
         { status: 401 }
       );
     }
+
+    // Обновляем время последнего входа
+    await prisma.adminUser.update({
+      where: { id: user.id },
+      data: { lastLogin: new Date() }
+    });
 
     // Создаем JWT токен
     const token = jwt.sign(
