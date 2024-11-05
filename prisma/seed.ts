@@ -1,42 +1,45 @@
+// prisma/seed.ts
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 
-const prisma = new PrismaClient();
+const seedPrisma = new PrismaClient();
 
 async function main() {
   try {
-    const adminExists = await prisma.adminUser.findFirst({
-      where: { email: 'admin@example.com' }
-    })
-
-    if (!adminExists) {
-      console.log('Creating default admin user...')
-      const hashedPassword = await bcrypt.hash('admin123', 10)
+    // Проверяем существование админа
+    const adminCount = await seedPrisma.adminUser.count();
+    
+    if (adminCount === 0) {
+      const hashedPassword = await bcrypt.hash('admin123', 10);
       
-      await prisma.adminUser.create({
+      // Создаем первого администратора
+      await seedPrisma.adminUser.create({
         data: {
           email: 'admin@example.com',
           passwordHash: hashedPassword,
           role: 'admin'
         }
-      })
-      console.log('Default admin user created')
+      });
+
+      console.log('Default admin user created');
     } else {
-      console.log('Admin user already exists')
+      console.log('Admin user already exists');
     }
+
+    console.log('Seed completed successfully');
   } catch (error) {
-    console.error('Error during seeding:', error)
-    process.exit(1)
+    console.error('Error during database seed:', error);
+    throw error;
   } finally {
-    await prisma.$disconnect()
+    await seedPrisma.$disconnect();
   }
 }
 
 main()
-  .catch((e) => {
-    console.error(e)
-    process.exit(1)
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect()
-  })
+    await seedPrisma.$disconnect();
+  });
