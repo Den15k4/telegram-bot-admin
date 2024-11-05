@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import prisma from '@/lib/db';
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 export async function POST(req: Request) {
   console.log('Login request received');
